@@ -170,6 +170,10 @@ CREATE POLICY "Users can update own summaries"
   TO authenticated
   USING (user_id = auth.uid());
 
+create policy "Users can delete their own account"
+  on users for delete
+  using (auth.uid() = id);
+
 -- Create updated_at function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

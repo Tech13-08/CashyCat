@@ -18,6 +18,7 @@ interface UserProfile {
   monthly_income: number;
   tracking_start_day: number;
   display_name: string | null;
+  theme_preference: string;
 }
 
 interface Budget {
@@ -50,14 +51,8 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (user) {
       fetchUserData();
-      loadTheme();
     }
   }, [user]);
-
-  const loadTheme = () => {
-    const savedTheme = localStorage.getItem("cashcat-theme") || "default";
-    applyTheme(savedTheme);
-  };
 
   const applyTheme = (themeId: string) => {
     document.documentElement.setAttribute("data-theme", themeId);
@@ -118,14 +113,26 @@ const Dashboard: React.FC = () => {
     if (!user) return;
 
     try {
-      // Fetch user profile
+      // Fetch user profile including theme preference
       const { data: profile } = await supabase
         .from("users")
-        .select("monthly_income, tracking_start_day, display_name")
+        .select(
+          "monthly_income, tracking_start_day, display_name, theme_preference"
+        )
         .eq("id", user.id)
         .single();
 
       setUserProfile(profile);
+
+      // Apply theme from database
+      if (profile?.theme_preference) {
+        applyTheme(profile.theme_preference);
+        localStorage.setItem("cashcat-theme", profile.theme_preference);
+      } else {
+        // Fallback to localStorage if no theme in database
+        const savedTheme = localStorage.getItem("cashcat-theme") || "default";
+        applyTheme(savedTheme);
+      }
 
       // Fetch budgets
       const { data: budgetsData } = await supabase
@@ -218,7 +225,10 @@ const Dashboard: React.FC = () => {
   };
 
   const getThemeClasses = () => {
-    const savedTheme = localStorage.getItem("cashcat-theme") || "default";
+    const savedTheme =
+      userProfile?.theme_preference ||
+      localStorage.getItem("cashcat-theme") ||
+      "default";
 
     const themeClasses: Record<string, any> = {
       default: {
@@ -252,7 +262,9 @@ const Dashboard: React.FC = () => {
   };
 
   const themeClasses = getThemeClasses();
-  const isDarkTheme = localStorage.getItem("cashcat-theme") === "dark";
+  const isDarkTheme =
+    (userProfile?.theme_preference || localStorage.getItem("cashcat-theme")) ===
+    "dark";
 
   if (loading) {
     return (

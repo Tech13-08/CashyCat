@@ -49,7 +49,7 @@ const themes: Theme[] = [
     description: "Sleek dark theme for night owls",
     colors: {
       primary: "from-gray-900 via-gray-800 to-gray-900",
-      secondary: "from-gray-700 to-gray-800",
+      secondary: "from-gray-800 to-gray-900",
       accent: "blue",
       background: "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900",
       surface: "bg-gray-800",
@@ -118,7 +118,6 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
   useEffect(() => {
     if (user) {
       fetchUserProfile();
-      loadTheme();
     }
   }, [user]);
 
@@ -127,7 +126,9 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
 
     const { data } = await supabase
       .from("users")
-      .select("monthly_income, tracking_start_day, display_name")
+      .select(
+        "monthly_income, tracking_start_day, display_name, theme_preference"
+      )
       .eq("id", user.id)
       .single();
 
@@ -135,13 +136,15 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
       setMonthlyIncome(data.monthly_income?.toString() || "");
       setTrackingStartDay(data.tracking_start_day || 1);
       setDisplayName(data.display_name || "");
-    }
-  };
 
-  const loadTheme = () => {
-    const savedTheme = localStorage.getItem("cashcat-theme") || "default";
-    setSelectedTheme(savedTheme);
-    applyTheme(savedTheme);
+      // Load theme from database or fallback to localStorage
+      const dbTheme = data.theme_preference || "default";
+      setSelectedTheme(dbTheme);
+      applyTheme(dbTheme);
+
+      // Update localStorage to match database
+      localStorage.setItem("cashcat-theme", dbTheme);
+    }
   };
 
   const applyTheme = (themeId: string) => {
@@ -151,9 +154,6 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
     // Apply CSS custom properties for the theme
     const root = document.documentElement;
     root.style.setProperty("--theme-accent", theme.colors.accent);
-
-    // Store theme preference
-    localStorage.setItem("cashcat-theme", themeId);
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -177,6 +177,7 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
         display_name: displayName.trim() || null,
         monthly_income: income,
         tracking_start_day: trackingStartDay,
+        theme_preference: selectedTheme, // Save theme to database
       });
 
       if (error) {
@@ -231,11 +232,33 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
     }
   };
 
-  const handleThemeChange = (themeId: string) => {
+  const handleThemeChange = async (themeId: string) => {
+    if (!user) return;
+
     setSelectedTheme(themeId);
     applyTheme(themeId);
-    setSuccess("Theme updated successfully!");
-    setTimeout(() => setSuccess(""), 3000);
+
+    // Update localStorage immediately for instant feedback
+    localStorage.setItem("cashcat-theme", themeId);
+
+    try {
+      // Save theme to database
+      const { error } = await supabase
+        .from("users")
+        .update({ theme_preference: themeId })
+        .eq("id", user.id);
+
+      if (error) {
+        console.error("Error saving theme preference:", error);
+        setError("Failed to save theme preference");
+      } else {
+        setSuccess("Theme updated successfully!");
+        setTimeout(() => setSuccess(""), 3000);
+      }
+    } catch (err) {
+      console.error("Error updating theme:", err);
+      setError("Failed to save theme preference");
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -251,31 +274,41 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
     }
 
     setDeleteLoading(true);
+    setError("");
 
     try {
-      // Delete user data (RLS policies will handle cascade deletion)
+      // First delete user data from our tables (RLS policies will handle cascade deletion)
       const { error: deleteError } = await supabase
         .from("users")
         .delete()
         .eq("id", user.id);
 
       if (deleteError) {
-        setError("Failed to delete account data");
+        setError("Failed to delete account data: " + deleteError.message);
         return;
       }
 
-      // Delete auth user
-      const { error: authError } = await supabase.auth.admin.deleteUser(
-        user.id
-      );
+      // Delete the user from Supabase Auth using the user's own session
+      // This is the proper way to delete a user account from the client side
+      const { error: authError } = await supabase.rpc("delete_user");
 
       if (authError) {
         console.error("Auth deletion error:", authError);
+        // Even if auth deletion fails, we've deleted the user data
+        // So we should still sign them out
       }
 
-      // Sign out and redirect
+      // Clear all local data and sign out
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Sign out the user
       await signOut();
+
+      // Force redirect to home page
+      window.location.href = "/";
     } catch (err) {
+      console.error("Error deleting account:", err);
       setError("An unexpected error occurred while deleting your account");
     } finally {
       setDeleteLoading(false);
@@ -353,7 +386,7 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Display Name (Optional)
                 </label>
                 <div className="relative">
@@ -369,7 +402,7 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Monthly Income
                 </label>
                 <div className="relative">
@@ -387,7 +420,7 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Tracking Period Start Day
                 </label>
                 <div className="relative">
@@ -440,7 +473,7 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Current Password
                 </label>
                 <div className="relative">
@@ -468,7 +501,7 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   New Password
                 </label>
                 <div className="relative">
@@ -496,7 +529,7 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Confirm New Password
                 </label>
                 <div className="relative">
@@ -557,7 +590,7 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
                       <div
                         className={`w-full h-16 rounded-lg mb-3 ${theme.colors.background}`}
                       ></div>
-                      <h4 className="font-semibold text-gray-700">
+                      <h4 className="font-semibold text-gray-800">
                         {theme.name}
                       </h4>
                       <p className="text-sm text-gray-600">
@@ -580,6 +613,12 @@ const IncomeSetup: React.FC<IncomeSetupProps> = ({ onComplete }) => {
           {/* Danger Zone Tab */}
           {activeTab === "danger" && (
             <div className="space-y-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+                  {error}
+                </div>
+              )}
+
               <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                 <div className="flex items-center space-x-3 mb-4">
                   <Trash2 className="w-6 h-6 text-red-600" />
