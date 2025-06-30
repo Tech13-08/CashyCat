@@ -320,7 +320,7 @@ const Dashboard: React.FC = () => {
                     isDarkTheme ? "text-white" : "text-gray-800"
                   }`}
                 >
-                  CashCat
+                  CashyCat
                 </h1>
                 <p
                   className={`text-sm ${
