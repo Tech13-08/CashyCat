@@ -1,5 +1,5 @@
 /*
-  # CashCat Finance Management Database Schema
+  # CashyCat Finance Management Database Schema
 
   1. New Tables
     - `users` - User profiles (extends Supabase auth.users)
