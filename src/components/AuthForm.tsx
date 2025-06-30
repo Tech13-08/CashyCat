@@ -1,31 +1,31 @@
-import React, { useState } from 'react';
-import { useAuthContext } from '../contexts/AuthContext';
-import { Cat, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import React, { useState } from "react";
+import { useAuthContext } from "../contexts/AuthContext";
+import { Cat, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 const AuthForm: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const { signIn, signUp } = useAuthContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const { error } = isLogin 
+      const { error } = isLogin
         ? await signIn(email, password)
         : await signUp(email, password);
-      
+
       if (error) {
         setError(error.message);
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -39,7 +39,7 @@ const AuthForm: React.FC = () => {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-orange-100 rounded-full mb-4 animate-bounce">
             <Cat className="w-10 h-10 text-orange-500" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">CashCat</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">CashyCat</h1>
           <p className="text-gray-600">Purr-fect finance management</p>
         </div>
 
@@ -67,7 +67,7 @@ const AuthForm: React.FC = () => {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -79,7 +79,11 @@ const AuthForm: React.FC = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>
@@ -89,7 +93,7 @@ const AuthForm: React.FC = () => {
             disabled={loading}
             className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200"
           >
-            {loading ? '🐱 Meow...' : isLogin ? 'Sign In' : 'Sign Up'}
+            {loading ? "🐱 Meow..." : isLogin ? "Sign In" : "Sign Up"}
           </button>
 
           <div className="text-center">
@@ -98,7 +102,9 @@ const AuthForm: React.FC = () => {
               onClick={() => setIsLogin(!isLogin)}
               className="text-orange-500 hover:text-orange-600 font-medium transition-colors duration-200"
             >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              {isLogin
+                ? "Don't have an account? Sign up"
+                : "Already have an account? Sign in"}
             </button>
           </div>
         </form>
