@@ -208,7 +208,8 @@ const BudgetPurchases: React.FC = () => {
 
   // Format date for display in local timezone (date only, no time)
   const formatDateForDisplay = (dateString: string) => {
-    const date = new Date(dateString);
+    const [year, month, day] = dateString.split("-");
+    const date = new Date(Number(year), Number(month) - 1, Number(day)); // local time, not UTC
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",

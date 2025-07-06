@@ -38,12 +38,9 @@ const EditPurchaseModal: React.FC<EditPurchaseModalProps> = ({
   >(purchase.payment_method);
 
   // Format date for local timezone display (date only, no time)
+  // New: trust the input is in 'YYYY-MM-DD' and use it directly
   const formatDateForInput = (dateString: string) => {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return dateString.split("T")[0]; // removes time if it exists
   };
 
   const [purchaseDate, setPurchaseDate] = useState(
@@ -66,8 +63,8 @@ const EditPurchaseModal: React.FC<EditPurchaseModalProps> = ({
         return;
       }
 
-      // Create date without time - store as date only
-      const dateOnly = new Date(purchaseDate + "T00:00:00.000Z");
+      // Store date as local date string (YYYY-MM-DD) to preserve local time
+      const localDateString = purchaseDate; // already in YYYY-MM-DD format, local
 
       const { error } = await supabase
         .from("purchases")
@@ -75,7 +72,7 @@ const EditPurchaseModal: React.FC<EditPurchaseModalProps> = ({
           amount: purchaseAmount,
           description,
           payment_method: paymentMethod,
-          purchase_date: dateOnly.toISOString(),
+          purchase_date: localDateString, // store as local date string
         })
         .eq("id", purchase.id);
 

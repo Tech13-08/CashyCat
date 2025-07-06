@@ -199,6 +199,11 @@ const Dashboard: React.FC = () => {
     (sum, budget) => sum + calculateBudgetAmount(budget),
     0
   );
+
+  // Calculate unbudgeted income
+  const unbudgetedIncome = userProfile
+    ? Math.max(0, userProfile.monthly_income - totalBudgeted)
+    : 0;
   const totalSpent = purchases.reduce(
     (sum, purchase) => sum + purchase.amount,
     0
@@ -357,11 +362,13 @@ const Dashboard: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Financial Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 lg:gap-6 mb-8">
           <div
-            className={`${
+            className={`$${
               isDarkTheme ? "bg-gray-800" : "bg-white"
-            } rounded-2xl shadow-lg p-6 border ${themeClasses.cardBorder}`}
+            } rounded-2xl shadow-lg p-4 md:p-3 lg:p-6 border ${
+              themeClasses.cardBorder
+            }`}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -380,10 +387,37 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Unbudgeted Income Card */}
           <div
-            className={`${
+            className={`$${
               isDarkTheme ? "bg-gray-800" : "bg-white"
-            } rounded-2xl shadow-lg p-6 border ${themeClasses.cardBorder}`}
+            } rounded-2xl shadow-lg p-4 md:p-3 lg:p-6 border ${
+              themeClasses.cardBorder
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p
+                  className={`text-sm ${
+                    isDarkTheme ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
+                  Not Yet Budgeted
+                </p>
+                <p className="text-2xl font-bold text-orange-500">
+                  ${unbudgetedIncome.toFixed(2)}
+                </p>
+              </div>
+              <Wallet className="w-8 h-8 text-orange-500" />
+            </div>
+          </div>
+
+          <div
+            className={`$${
+              isDarkTheme ? "bg-gray-800" : "bg-white"
+            } rounded-2xl shadow-lg p-4 md:p-3 lg:p-6 border ${
+              themeClasses.cardBorder
+            }`}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -403,9 +437,11 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div
-            className={`${
+            className={`$${
               isDarkTheme ? "bg-gray-800" : "bg-white"
-            } rounded-2xl shadow-lg p-6 border ${themeClasses.cardBorder}`}
+            } rounded-2xl shadow-lg p-4 md:p-3 lg:p-6 border ${
+              themeClasses.cardBorder
+            }`}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -425,9 +461,11 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div
-            className={`${
+            className={`$${
               isDarkTheme ? "bg-gray-800" : "bg-white"
-            } rounded-2xl shadow-lg p-6 border ${themeClasses.cardBorder}`}
+            } rounded-2xl shadow-lg p-4 md:p-3 lg:p-6 border ${
+              themeClasses.cardBorder
+            }`}
           >
             <div className="flex items-center justify-between">
               <div>

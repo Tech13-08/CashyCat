@@ -55,8 +55,8 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
         return;
       }
 
-      // Create date without time - store as date only
-      const dateOnly = new Date(purchaseDate + "T00:00:00.000Z");
+      // Store date as local date string (YYYY-MM-DD) to preserve local time
+      const localDateString = purchaseDate; // already in YYYY-MM-DD format, local
 
       const { error } = await supabase.from("purchases").insert({
         user_id: user.id,
@@ -64,7 +64,7 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
         amount: purchaseAmount,
         description,
         payment_method: paymentMethod,
-        purchase_date: dateOnly.toISOString(),
+        purchase_date: localDateString, // store as local date string
       });
 
       if (error) {
