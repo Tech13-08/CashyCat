@@ -13,7 +13,7 @@ interface Purchase {
   id: string;
   amount: number;
   description: string;
-  payment_method: "bank" | "credit" | "cash";
+  payment_method: "bank" | "credit" | "cash" | "save";
   purchase_date: string;
 }
 
@@ -34,7 +34,7 @@ const EditPurchaseModal: React.FC<EditPurchaseModalProps> = ({
   const [amount, setAmount] = useState(purchase.amount.toString());
   const [description, setDescription] = useState(purchase.description);
   const [paymentMethod, setPaymentMethod] = useState<
-    "bank" | "credit" | "cash"
+    "bank" | "credit" | "cash" | "save"
   >(purchase.payment_method);
 
   // Format date for local timezone display (date only, no time)
@@ -150,17 +150,20 @@ const EditPurchaseModal: React.FC<EditPurchaseModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Payment Method
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               {[
                 { value: "bank", label: "Bank", icon: "🏦" },
                 { value: "credit", label: "Credit", icon: "💳" },
                 { value: "cash", label: "Cash", icon: "💵" },
+                { value: "save", label: "Save", icon: "💰" },
               ].map((method) => (
                 <button
                   key={method.value}
                   type="button"
                   onClick={() =>
-                    setPaymentMethod(method.value as "bank" | "credit" | "cash")
+                    setPaymentMethod(
+                      method.value as "bank" | "credit" | "cash" | "save"
+                    )
                   }
                   className={`p-3 rounded-lg border-2 transition-all duration-200 ${
                     paymentMethod === method.value

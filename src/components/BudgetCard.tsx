@@ -28,7 +28,10 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const percentage = budgetAmount > 0 ? (spent / budgetAmount) * 100 : 0;
-  const remaining = budgetAmount - spent;
+  const remaining =
+    budgetAmount - spent < 0 && budgetAmount - spent > -0.01
+      ? 0
+      : budgetAmount - spent;
 
   // Modal state
   const [showEditModal, setShowEditModal] = useState(false);

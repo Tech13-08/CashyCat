@@ -34,7 +34,7 @@ interface Purchase {
   budget_id: string;
   amount: number;
   description: string;
-  payment_method: "bank" | "credit" | "cash";
+  payment_method: "bank" | "credit" | "cash" | "save";
   purchase_date: string;
 }
 
@@ -181,16 +181,22 @@ const Dashboard: React.FC = () => {
     return 0;
   };
 
+  // Treat 'save' as a normal payment method for budget spent
   const calculateBudgetSpent = (budgetId: string) => {
     return purchases
       .filter((p) => p.budget_id === budgetId)
       .reduce((sum, p) => sum + p.amount, 0);
   };
 
+  // Include 'save' in payment breakdown
   const calculateTotalsByPaymentMethod = () => {
-    const totals = { bank: 0, credit: 0, cash: 0 };
+    const totals = { bank: 0, credit: 0, cash: 0, save: 0 };
     purchases.forEach((purchase) => {
-      totals[purchase.payment_method] += purchase.amount;
+      if (
+        Object.prototype.hasOwnProperty.call(totals, purchase.payment_method)
+      ) {
+        totals[purchase.payment_method] += purchase.amount;
+      }
     });
     return totals;
   };
@@ -212,10 +218,12 @@ const Dashboard: React.FC = () => {
   const unbudgetedIncome = userProfile
     ? Math.max(0, userProfile.monthly_income - totalBudgeted - overBudget)
     : 0;
-  const totalSpent = purchases.reduce(
-    (sum, purchase) => sum + purchase.amount,
-    0
-  );
+  // Subtract total saved from total spent for overall spending
+  const totalSaved = purchases
+    .filter((p) => p.payment_method === "save")
+    .reduce((sum, p) => sum + p.amount, 0);
+  const totalSpent =
+    purchases.reduce((sum, purchase) => sum + purchase.amount, 0) - totalSaved;
   const paymentTotals = calculateTotalsByPaymentMethod();
 
   // Format tracking period for display
@@ -512,7 +520,7 @@ const Dashboard: React.FC = () => {
           >
             Payment Method Breakdown
           </h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div className="text-center">
               <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-2">
                 <CreditCard className="w-6 h-6 text-blue-500" />
@@ -556,6 +564,21 @@ const Dashboard: React.FC = () => {
               </p>
               <p className="text-xl font-bold text-green-600">
                 ${paymentTotals.cash.toFixed(2)}
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mx-auto mb-2">
+                <PiggyBank className="w-6 h-6 text-yellow-500" />
+              </div>
+              <p
+                className={`text-sm ${
+                  isDarkTheme ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Saved
+              </p>
+              <p className="text-xl font-bold text-yellow-600">
+                ${paymentTotals.save.toFixed(2)}
               </p>
             </div>
           </div>
