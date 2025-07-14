@@ -200,9 +200,17 @@ const Dashboard: React.FC = () => {
     0
   );
 
-  // Calculate unbudgeted income
+  // Calculate unbudgeted income, subtracting any purchases that go over budget
+  let overBudget = 0;
+  budgets.forEach((budget) => {
+    const spent = calculateBudgetSpent(budget.id);
+    const allowed = calculateBudgetAmount(budget);
+    if (spent > allowed) {
+      overBudget += spent - allowed;
+    }
+  });
   const unbudgetedIncome = userProfile
-    ? Math.max(0, userProfile.monthly_income - totalBudgeted)
+    ? Math.max(0, userProfile.monthly_income - totalBudgeted - overBudget)
     : 0;
   const totalSpent = purchases.reduce(
     (sum, purchase) => sum + purchase.amount,
